@@ -41,7 +41,7 @@ def word_counter(reddit, bot_config):
     word_count_thresh = bot_config['word_count_threshold']
 
     # Grabbing all the comments
-    logger.info(f"Checking comments of last {days} in r/{bot_config['subreddit']}")
+    logger.info(f"Checking comments of last {days} days in r/{bot_config['subreddit']}")
     for comment in tqdm(subreddit.comments(limit=None), desc="Reading all the comments..."):
         if is_posted_within(comment.created_utc, days) and word_count_above_thresh(comment.body, word_count_thresh):
             logger.debug(f"Added comment crated on {datetime.fromtimestamp(comment.created_utc):'%Y-%m-%d %H:%M:%S'} by u/{comment.author}.")
