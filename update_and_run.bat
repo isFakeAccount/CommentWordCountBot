@@ -1,6 +1,6 @@
 git pull
 venv\Scripts\pip install -r requirements.txt
-venv\Scripts\pip install --upgrade pip
+venv\Scripts\pip install --user --upgrade pip
 
 if exist config.yaml (
 	venv\Scripts\python main.py
