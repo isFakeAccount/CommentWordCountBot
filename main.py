@@ -4,6 +4,7 @@ from platform import platform
 from time import time
 
 from praw import Reddit
+from tqdm import tqdm
 from yaml import safe_load
 
 SECONDS_IN_DAY = 86_400
@@ -41,7 +42,7 @@ def word_counter(reddit, bot_config):
 
     # Grabbing all the comments
     logger.info(f"Checking comments of last {days} in r/{bot_config['subreddit']}")
-    for comment in subreddit.comments(limit=None):
+    for comment in tqdm(subreddit.comments(limit=None), desc="Reading all the comments..."):
         if is_posted_within(comment.created_utc, days) and word_count_above_thresh(comment.body, word_count_thresh):
             logger.debug(f"Added comment crated on {datetime.fromtimestamp(comment.created_utc):'%Y-%m-%d %H:%M:%S'} by u/{comment.author}.")
             comments.append(comment)
@@ -49,14 +50,12 @@ def word_counter(reddit, bot_config):
     # Formatting the submission
     submission_title = f"Writing Prompt Responses [{datetime.today():%b %d, %Y}-{datetime.now() - timedelta(7):%b %d, %Y}]."
     submission_body = f"We received {len(comments)} comments longer than {word_count_thresh} word count in last {days} days.\n\n"
-    for comment in comments:
-        submission_body += f"[Comment](https://reddit.com{comment.permalink}) by u/{comment.author} in submission titled \"{comment.submission.title}\" on " \
-                           f"{datetime.fromtimestamp(comment.created_utc):%b %d, %Y}\n\n"
-        if bot_config['include_body']:
-            submission_body += f"> {comment.body}\n\n"
+    for comment in tqdm(comments, desc="Formatting all the comments into a submission..."):
+        submission_body += f"u/{comment.author} in submission titled\n> {comment.submission.title}\non " \
+                           f"{datetime.fromtimestamp(comment.created_utc):%b %d, %Y}: [link](https://reddit.com{comment.permalink}) \n\n"
 
-    logger.info(f"{submission_title}\n\n{submission_body}")
-    if 'y' in input("Submit the submission (above) on subreddit, yes or no? ").lower():
+    logger.debug(f"{submission_title}\n\n{submission_body}")
+    if 'y' in input("Submit the submission on subreddit, yes or no? ").lower():
         submission = subreddit.submit(title=submission_title, selftext=submission_body)
         if 'y' in input("Pin the submission, yes or no? This will automatically remove previously pinned submission if any. "):
             submission.mod.distinguish(how="yes")
@@ -86,7 +85,7 @@ if __name__ == '__main__':
 
     # Setting up the streaming
     log_stream = logging.StreamHandler()
-    log_stream.setLevel(logging.DEBUG)  # To make the script verbose set level to logging.DEBUG
+    log_stream.setLevel(logging.INFO)  # To make the script verbose set level to logging.DEBUG
     formatter = logging.Formatter('[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s')
     log_stream.setFormatter(formatter)
     logger.addHandler(log_stream)

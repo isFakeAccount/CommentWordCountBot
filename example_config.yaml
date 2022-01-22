@@ -7,6 +7,3 @@ reddit_credentials:
 subreddit: "example_subreddit"
 word_count_threshold: 300
 days: 7
-
-# Whether to include comment body in submission or not.
-include_body: True
