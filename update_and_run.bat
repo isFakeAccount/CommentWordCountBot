@@ -1,3 +1,5 @@
+@echo off
+
 git pull
 venv\Scripts\pip install -r requirements.txt
 venv\Scripts\pip install --user --upgrade pip
