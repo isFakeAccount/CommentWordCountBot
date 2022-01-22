@@ -47,10 +47,10 @@ def word_counter(reddit, bot_config):
             comments.append(comment)
 
     # Formatting the submission
-    submission_title = f"Longest comments within [{datetime.today():%b %d, %Y}-{datetime.now() - timedelta(7):%b %d, %Y}]."
+    submission_title = f"Writing Prompt Responses [{datetime.today():%b %d, %Y}-{datetime.now() - timedelta(7):%b %d, %Y}]."
     submission_body = f"We received {len(comments)} comments longer than {word_count_thresh} word count in last {days} days.\n\n"
     for comment in comments:
-        submission_body += f"[{comment.author}](https://reddit.com{comment.permalink}) in submission {comment.submission.title} on " \
+        submission_body += f"[Comment](https://reddit.com{comment.permalink}) by u/{comment.author} in submission titled \"{comment.submission.title}\" on " \
                            f"{datetime.fromtimestamp(comment.created_utc):%b %d, %Y}\n\n"
         if bot_config['include_body']:
             submission_body += f"> {comment.body}\n\n"
@@ -59,7 +59,8 @@ def word_counter(reddit, bot_config):
     if 'y' in input("Submit the submission (above) on subreddit, yes or no? ").lower():
         submission = subreddit.submit(title=submission_title, selftext=submission_body)
         if 'y' in input("Pin the submission, yes or no? This will automatically remove previously pinned submission if any. "):
-            submission.mod.distinguish(how="yes", sticky=True)
+            submission.mod.distinguish(how="yes")
+            submission.mod.sticky()
         logger.info(f"Submission posted at {submission.url}")
 
 
