@@ -45,14 +45,17 @@ def word_counter(reddit, bot_config):
     for comment in tqdm(subreddit.comments(limit=None), desc="Reading all the comments..."):
         if is_posted_within(comment.created_utc, days) and word_count_above_thresh(comment.body, word_count_thresh):
             logger.debug(f"Added comment crated on {datetime.fromtimestamp(comment.created_utc):'%Y-%m-%d %H:%M:%S'} by u/{comment.author}.")
-            comments.append(comment)
+            comments += [(
+                f"**[WC:{len(comment.body.split())}]** u/{comment.author} on {datetime.fromtimestamp(comment.created_utc):%b %d, %Y} "
+                f"in submission titled\n> {comment.submission.title}: [link](https://reddit.com{comment.permalink})",
+                len(comment.body.split())
+            )]
 
     # Formatting the submission
+    comments.sort(key=lambda x: x[1], reverse=True)
     submission_title = f"Writing Prompt Responses [{datetime.today():%b %d, %Y}-{datetime.now() - timedelta(7):%b %d, %Y}]."
-    submission_body = f"We received {len(comments)} comments longer than {word_count_thresh} word count in last {days} days.\n\n"
-    for comment in tqdm(comments, desc="Formatting all the comments into a submission..."):
-        submission_body += f"u/{comment.author} in submission titled\n> {comment.submission.title}\non " \
-                           f"{datetime.fromtimestamp(comment.created_utc):%b %d, %Y}: [link](https://reddit.com{comment.permalink}) \n\n"
+    submission_body = f"We received {len(comments)} comments longer than {word_count_thresh} word count in last {days} days.\n\n" \
+                      + "\n\n".join(f"{index + 1}: {element}" for index, element in enumerate(map(lambda x: x[0], comments)))
 
     logger.debug(f"{submission_title}\n\n{submission_body}")
     if 'y' in input("Submit the submission on subreddit, yes or no? ").lower():
